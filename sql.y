@@ -231,6 +231,7 @@ fields: field {$$ = new table_field_node;
 deletesql: DELETE FROM table ';' {$$ = new select_node;
 				   $$->table = new table_node;
 				   $$->table->tableName = $3;
+				   $$->cons = nullptr;
 				   shell.sqldelete($$);}
 	  | DELETE FROM table WHERE conditions ';' {$$ = new select_node;
 	  					    $$->table = new table_node;

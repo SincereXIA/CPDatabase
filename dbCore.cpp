@@ -7,7 +7,7 @@
 #include <fstream>
 #include <vector>
 #include <string>
-#include <string.h>
+#include <cstring>
 
 
 char *_S(const char *string) {
@@ -101,7 +101,7 @@ int Core::createTable(const char *tableName, table_field_node *tfn) {
     for (auto t : tablesNow) {
         if (strcmp(t.tableName, tableName) == 0) {
             cout << "Error: table '" << tableName << "' already exists" << endl;
-            return -1;
+            return 0;
         }
     }
 
@@ -273,7 +273,7 @@ Core::select_single(select_node *selectNode) {
         }
         int i = 0;
 // TODO : 是否是最后一行的判定有问题
-        while (i * Recordlength + sizeof(int) <= PAGE_SIZE){
+        while ((i+1) * Recordlength + sizeof(int) <= PAGE_SIZE){
             if (*(DATPAGE + i * Recordlength) != '\0') {
                 vector<values_node> row;
                 vector<values_node> row_all;
@@ -671,7 +671,7 @@ int Core::sqldelete(select_node *deleteNode) {
             cout << "SELECT: readPage Error!" << endl;
         }
         int i = 0;
-        while (i * Recordlength + sizeof(int) <= PAGE_SIZE){
+        while ((i+1) * Recordlength + sizeof(int) <= PAGE_SIZE){
             if (*(DATPAGE + i * Recordlength) != '\0') {
                 vector<values_node> row;
                 for (auto h : head) {
@@ -738,7 +738,7 @@ int Core::sqlupdate(update_node * updateNode) {
             cout << "SELECT: readPage Error!" << endl;
         }
         int i = 0;
-        while (i * Recordlength + sizeof(int) <= PAGE_SIZE){
+        while ((i+1) * Recordlength + sizeof(int) <= PAGE_SIZE){
             if (*(DATPAGE + i * Recordlength) != '\0') {
                 vector<values_node> row;
                 for (auto h : head) {
