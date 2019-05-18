@@ -90,6 +90,7 @@ public:
     int deleteDatabase(char * databaseName);
     int useDatabase(const char * databaseName);
     int createTable(const char * tableName, table_field_node* tfn);
+    int deleteTable(const char * tableName);
     /*
     获取当前数据库中某个表所有的列
     */

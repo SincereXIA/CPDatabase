@@ -86,7 +86,7 @@ dbsql: CREATE DATABASE database ';'{shell.CreateDatabase($<chval>3);}
      | SHOW DATABASES ';' {shell.ShowDatabases();}
      | SHOW TABLES ';' {shell.ShowTables();}
      | DROP DATABASE database ';' {shell.DropDatabases($<chval>3);}
-     | DROP TABLE table ';' {}
+     | DROP TABLE table ';' {shell.dropTable($<chval>3);}
      | USE database ';' {shell.UseDatabase($<chval>3);}
      ;
 database: ID

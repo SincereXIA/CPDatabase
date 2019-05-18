@@ -78,3 +78,11 @@ void dbShell::sqlupdate(update_node *updateNode) {
     int num = core.sqlupdate(updateNode);
     cout << "Query OK, " << num << "rows affected" << endl;
 }
+
+void dbShell::dropTable(char *tableName) {
+    if(core.deleteTable(tableName)){
+        cout << "Drop Table Success" << endl;
+    }else{
+        cout << "Drop Table Failed" << endl;
+    }
+}

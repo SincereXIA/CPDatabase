@@ -777,5 +777,42 @@ int Core::sqlupdate(update_node * updateNode) {
     return updateNum;
 }
 
+int Core::deleteTable(const char * tableName) {
+    auto tablesNow = getTables();
+    char temp[100] = {0};
+    for (auto t : tablesNow) {
+        if (strcmp(t.tableName, tableName) == 0) {
+            int PageNow = 0; //表字典
+            for (int i = 0; i < 20; i++) {
+                int offset = PageNow * PAGE_SIZE + i * 100;
+                InUsedb->seekg(offset);
+                InUsedb->seekp(InUsedb->tellg());
+                InUsedb->read(temp, 100);
+                if (strcmp(temp, tableName)==0) {
+                    InUsedb->seekp(offset);
+                    memset(temp,'\0', 100);
+                    InUsedb->write(temp, 100);
+                    break;
+                }
+            }
+            PageNow = 1; // 列字典从 1 页开始存放
+
+            for (int i = 0; i < 20; i++) {
+                std::streampos offset = PageNow * PAGE_SIZE + i * 100;
+                InUsedb->seekg(offset);
+                InUsedb->seekp(offset);
+                InUsedb->read(temp, 100);
+                if (strcmp(temp, tableName)==0) {
+                    InUsedb->seekp(offset);
+                    memset(temp,'\0', 100);
+                    InUsedb->write(temp, 100); //清空该记录向
+                }
+            }
+            return 1;
+        }
+    }
+    return 0;
+}
+
 char Core::DATPAGE[PAGE_SIZE];
 int Core::TEMP[10];

@@ -13,6 +13,7 @@ public:
     void CreateDatabase(char * DatabaseName);
     void ShowDatabases();
     void ShowTables();
+    void dropTable(char * tableName);
     void DropDatabases(char * DatabaseName);
     void UseDatabase(char * DatabaseName);
     void CreateTable(char * tableName, table_field_node * tfn);
