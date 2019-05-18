@@ -3,6 +3,7 @@
     #include <vector>
     #include "dbCore.h"
     #include "sql.tab.h"
+    #include <cstring>
     int cur_line = 1;
 %}
 
@@ -27,7 +28,6 @@ VALUES VALUES|VALUES
 DELETE DELETE|delete
 UPDATE UPDATE|update
 SET SET|set
-
 ID [a-zA-Z][a-zA-Z_0-9]*
 NUMBER [-+]?[0-9][0-9]*
 STRING '.*'
@@ -75,8 +75,9 @@ STRING '.*'
 "!"  { return '!'; }
 
 \n   { cur_line++; }
-{STRING} {yylval.chval = strdup(yytext);  return STRING;}
+{STRING} {*(yytext+strlen(yytext)-1) = '\0'; yylval.chval = strdup(yytext+1);  return STRING;}
 [ \t]+                /* ignore whitespace */;
+"//".*                                    { /* DO NOTHING */ }
 %%
 
 int yywrap()//此函数必须由用户提供

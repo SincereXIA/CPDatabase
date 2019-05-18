@@ -112,6 +112,7 @@ public:
     void SysdbInit();
     vector<table_node> getTables();
     vector<char *> getDatabases();
+    char * InUseDBName;
 
 
 
@@ -124,7 +125,6 @@ private:
     fstream *sysdat;
     fstream * InUsedb;
     fstream * InUsedat;
-    char * InUseDBName;
 
     int getNewDatPage(fstream &datfile, int PageNow = 0);
     int getNextPageNum();

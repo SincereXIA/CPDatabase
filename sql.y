@@ -71,8 +71,8 @@ printf("Error '%s'\n", s);
 
 
 %%
-statements: statements statement
-          | statement
+statements: statements statement {printf("\nmysql>");}
+          | statement {printf("\nmysql>");}
           ;
 statement:   createsql
          |  selectsql
@@ -268,6 +268,7 @@ update: comp_left '=' comp_right  {$$ = new set_value;
 %%
 
 int main(){
+   printf("\nmysql>");
    while(1){
    	yyparse();
    }

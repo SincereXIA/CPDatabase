@@ -23,6 +23,8 @@ public:
 
     void sqldelete(select_node * selectNode);
     void sqlupdate(update_node * updateNode);
+    dbShell();
+    ~dbShell();
 
 private:
     Core core;

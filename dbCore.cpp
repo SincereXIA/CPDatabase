@@ -29,7 +29,7 @@ int Core::createDatabase(const char *databaseName) {
     for (auto db : databasesNow) {
         if (strcmp(databaseName, db) == 0) {
             cout << "Error: database '" << databaseName << "' already exists" << endl;
-            return -1;
+            return 0;
         }
     }
 
@@ -71,7 +71,7 @@ int Core::createDatabase(const char *databaseName) {
     InUsedat = new fstream(datfileName, ios::out | ios::binary);
 
     useDatabase(databaseName);
-    return (0);
+    return 1;
 }
 
 int Core::useDatabase(const char *databaseName) {
@@ -90,6 +90,7 @@ int Core::useDatabase(const char *databaseName) {
             strcat_s(datfileName, ".dat");
             InUsedat->close();
             InUsedat->open(datfileName, ios::out | ios::in | ios::binary);
+            this->InUseDBName = _S(databaseName);
             return 1;
         }
     }
@@ -352,15 +353,19 @@ Core::select_mult(select_node *selectNode) {
     }
 
     vector<vector<vector<values_node> > > temp;
+    vector<table_field_node> heads_New;
     for (auto &t : tables) {
         select_node sn;
         sn.table = &t;
         sn.cons = selectNode->cons;
         sn.field = t.field;
-        temp.push_back(select_single(&sn).second);
+        auto res = select_single(&sn);
+        temp.push_back(res.second);
+        heads_New.insert(heads_New.end(), res.first.begin(), res.first.end());
     }
     vector<vector<values_node> > colsNow = temp[0];
     vector<vector<values_node> > colsNew;
+
 
     for (int i = 1; i < temp.size(); i++) {
         for (auto ac : temp[i]) {
@@ -373,7 +378,7 @@ Core::select_mult(select_node *selectNode) {
         colsNew.clear();
     }
     return pair<vector<table_field_node>, vector<vector<values_node>>>(
-            head, colsNow
+            heads_New, colsNow
     );
 }
 
@@ -537,7 +542,6 @@ Core::Core() {
         sysdb->open("sys.db", ios::out | ios::binary);
         sysdb->close();
         sysdb->open("sys.db", ios::out | ios::in | ios::binary);
-        cout << " empty " << endl;
         getNewDatPage(*sysdb);
         getNewDatPage(*sysdb);
     }
@@ -551,10 +555,10 @@ Core::Core() {
         sysdat->open("sys.dat", ios::out | ios::binary);
         sysdat->close();
         sysdat->open("sys.dat", ios::out | ios::in | ios::binary);
-        cout << " empty " << endl;
     }
 
     if (needrebuild) {
+        cout << "Core Info: can not find 'sys.db' and 'sys.dat'. Rebuilding the basic database... " ;
         //临时
         InUsedb = sysdb;
         InUsedat = sysdat;
@@ -599,6 +603,7 @@ Core::Core() {
         insetNode.values = &val1;
         this->insert(&insetNode);
         createDatabase("default");
+        cout << "ok!" <<endl;
     }else {
         InUsedb = new fstream("default.db", ios::out | ios::in | ios::binary);
         InUsedat = new fstream("default.dat", ios::out | ios::in | ios::binary);
@@ -637,6 +642,8 @@ bool Core::condVerify(vector<table_field_node> head, vector<values_node> record,
                         return record[i].intval > intval;
                     } else if (cond->op == condexp_node::B) {
                         return record[i].intval < intval;
+                    }else if (cond->op == condexp_node::NOT) {
+                        return record[i].intval != intval;
                     }
                 } else if (head[i].type == head[i].STRING) {
                     string recstringval(record[i].chval);
@@ -646,6 +653,8 @@ bool Core::condVerify(vector<table_field_node> head, vector<values_node> record,
                         return recstringval > value;
                     } else if (cond->op == condexp_node::B) {
                         return recstringval < value;
+                    }else if (cond->op == condexp_node::NOT) {
+                        return recstringval != value;
                     }
                 }
             }
@@ -658,6 +667,18 @@ int Core::sqldelete(select_node *deleteNode) {
     int delNum = 0;
     // 获取要删除的表名
     char *tableName = deleteNode->table->tableName;
+//    auto tables = getTables();
+//    bool findflag = false;
+//    for (auto t:tables){
+//        if (strcmp(tableName, t.tableName)==0){
+//            findflag = true;
+//            break;
+//        }
+//    }
+//    if (!findflag){
+//        cout << "There is no table named: " << tableName << endl;
+//        return 0;
+//    }
     // 获取表的所有列属性
     auto tableCols = getColumn(tableName);
     vector<table_field_node> head = tableCols;
@@ -700,7 +721,6 @@ int Core::sqldelete(select_node *deleteNode) {
 
 int Core::deleteDatabase(char *databaseName) {
 
-
     auto deleteNode = new select_node;
     auto deleteTable = new table_node;
     deleteTable->tableName = _S("database");
@@ -713,9 +733,17 @@ int Core::deleteDatabase(char *databaseName) {
     cons->right->chval = databaseName;
     cons->right->type = cons->right->STRING;
     deleteNode->cons = cons;
-
+    InUsedb->close();
+    InUsedat->close();
     useDatabase("sys");
-    if (sqldelete(deleteNode)){
+    char dbfileName[40] = {0};
+    char datfileName[40] = {0};
+    strcat_s(dbfileName, strlen(databaseName) + 1, databaseName);
+    strcat_s(dbfileName, ".db");
+    strcat_s(datfileName, strlen(databaseName) + 1, databaseName);
+    strcat_s(datfileName, ".dat");
+
+    if (sqldelete(deleteNode) && remove(dbfileName) && remove(datfileName)){
         return  1;
     }
     return 0;
